@@ -29,8 +29,7 @@ export default function Layout({ children }) {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link to="/" className="text-lg font-semibold text-gray-900 tracking-tight">
-            HRS
-          </Link>
+            Hotel Reservation System <strong>Staging</strong>          </Link>
           <nav className="flex items-center gap-1.5">
             <Link to="/" className={linkClass("/")}>
               Home
