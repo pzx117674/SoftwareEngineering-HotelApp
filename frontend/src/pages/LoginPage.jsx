@@ -89,13 +89,24 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Demo hint */}
-        <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-          <p className="text-xs text-blue-700 font-medium mb-1">Demo Credentials</p>
-          <p className="text-xs text-blue-600">
-            Username: <span className="font-mono font-semibold">admin</span> &nbsp;/&nbsp;
-            Password: <span className="font-mono font-semibold">admin123</span>
-          </p>
+        {/* Demo credentials */}
+        <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <p className="text-xs text-blue-700 font-semibold mb-2 text-center">Demo Credentials</p>
+          <table className="w-full text-xs text-blue-700">
+            <tbody className="divide-y divide-blue-100">
+              {[
+                { role: "Manager",       user: "admin",      pass: "admin123" },
+                { role: "Receptionist",  user: "reception",  pass: "reception123" },
+                { role: "Marketing",     user: "marketing",  pass: "marketing123" },
+              ].map(({ role, user, pass }) => (
+                <tr key={user} className="[&>td]:py-1">
+                  <td className="text-blue-500 pr-2">{role}</td>
+                  <td className="font-mono font-semibold pr-2">{user}</td>
+                  <td className="font-mono text-blue-500">{pass}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         {/* Back link */}

@@ -16,7 +16,7 @@ export default function UserLoginPage() {
     navigate(redirect, { replace: true });
     return null;
   }
-  if (user && user.role === "manager") {
+  if (user && ["manager", "receptionist", "marketing"].includes(user.role)) {
     navigate("/dashboard", { replace: true });
     return null;
   }
@@ -91,10 +91,11 @@ export default function UserLoginPage() {
           </button>
         </form>
 
-        <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-          <p className="text-xs text-blue-700 font-medium mb-1">Demo Credentials</p>
-          <p className="text-xs text-blue-600">
-            Username: <span className="font-mono font-semibold">user</span> &nbsp;/&nbsp;
+        <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <p className="text-xs text-blue-700 font-semibold mb-2 text-center">Demo Credentials</p>
+          <p className="text-xs text-blue-600 text-center">
+            Username: <span className="font-mono font-semibold">user</span>
+            &nbsp;/&nbsp;
             Password: <span className="font-mono font-semibold">user123</span>
           </p>
         </div>
