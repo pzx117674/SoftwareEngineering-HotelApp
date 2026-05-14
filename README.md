@@ -12,129 +12,172 @@ A university Software Engineering prototype implementing a hotel room reservatio
 | Styling   | Tailwind CSS 4                    |
 | Routing   | React Router 7                    |
 
-The architecture follows a **client-server model**: the React frontend communicates with the Express backend via REST API calls, and the backend persists data in a local SQLite file (`backend/hotel.db`).
+The architecture follows a **client-server model**: the React frontend is built to static files and served directly by the Express backend. All API calls and the UI are served from a single origin (`localhost:3001`).
 
-## Prerequisites
+## Running with Docker (recommended)
+
+The easiest way to run the app — no Node.js installation required.
+
+### Prerequisites
+
+- **Docker Desktop** — [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)
+
+### Start
+
+```bash
+docker compose up --build
+```
+
+First build takes ~2-3 minutes (downloads base image, installs packages, compiles React). Subsequent starts take ~15 seconds thanks to Docker layer caching.
+
+Open **http://localhost:3001** in your browser.
+
+### Stop
+
+```
+Ctrl+C
+```
+
+or `docker compose down`
+
+> **Note:** The SQLite database is created fresh inside the container on each first run and seeded with demo data automatically.
+
+---
+
+## Running locally (development)
+
+### Prerequisites
 
 - **Node.js** v18 or later — [https://nodejs.org](https://nodejs.org)
 - **npm** (included with Node.js)
 
-No external database server is required. SQLite runs in-process.
-
-## Getting Started
-
-### 1. Install Dependencies
-
-From the project root:
+### 1. Install dependencies
 
 ```bash
-npm install
-npm run install:all
+# Install backend dependencies
+cd backend && npm install && cd ..
+
+# Install frontend dependencies
+cd frontend && npm install && cd ..
 ```
 
-This installs:
-- Root: `concurrently` (runs backend + frontend simultaneously)
-- Backend: `express`, `better-sqlite3`, `cors`
-- Frontend: `react`, `vite`, `tailwindcss`, `react-router-dom`
-
-### 2. Start the Application
+### 2. Start both servers
 
 ```bash
-npm run dev
+# Backend (port 3001)
+cd backend && npm run dev
+
+# Frontend in a second terminal (port 5173)
+cd frontend && npm run dev
 ```
 
-This starts both servers concurrently:
+| Service  | URL                   |
+| -------- | --------------------- |
+| Frontend | http://localhost:5173 |
+| Backend  | http://localhost:3001 |
 
-| Service  | URL                          |
-| -------- | ---------------------------- |
-| Frontend | http://localhost:5173        |
-| Backend  | http://localhost:3001        |
+### Reset the database
 
-On first launch, the backend automatically creates `backend/hotel.db` and seeds it with dummy data (10 rooms, 3 customers, sample reservations).
+```bash
+rm backend/hotel.db
+```
 
-### 3. Use the Application
+Restart the backend — it recreates and re-seeds automatically.
 
-- **Customer View** (`/`): Search available rooms by dates, view prices, book a room, and complete a mock payment.
-- **Staff Dashboard** (`/dashboard`): View all rooms and their statuses, change room status (Available / Booked / Maintenance), and view all reservations.
+---
+
+## Using the Application
+
+- **Customer view** (`/`): Search available rooms by dates, view prices, book a room, complete a mock payment.
+- **Staff dashboard** (`/dashboard`): View all rooms and their statuses, change room status (Available / Booked / Maintenance), view all reservations.
+
+---
 
 ## Project Structure
 
 ```
 SoftwareEngineering-HotelApp/
-├── README.md
-├── package.json                 # Root scripts (concurrently)
-├── .gitignore
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
 ├── backend/
 │   ├── package.json
 │   ├── hotel.db                 # Created at runtime (gitignored)
 │   └── src/
-│       ├── index.js             # Express server entry point
-│       ├── database.js          # SQLite init, schema creation
-│       ├── seed.js              # Dummy data seeding
+│       ├── index.js             # Express server + serves frontend dist/
+│       ├── database.js          # SQLite init & schema
+│       ├── seed.js              # Demo data
 │       └── routes/
-│           ├── rooms.js         # Room endpoints
-│           ├── reservations.js  # Reservation endpoints
-│           └── payments.js      # Payment endpoint
+│           ├── auth.js
+│           ├── rooms.js
+│           ├── reservations.js
+│           └── payments.js
 └── frontend/
-    ├── package.json
     ├── vite.config.js
-    ├── index.html
     └── src/
-        ├── main.jsx
-        ├── App.jsx              # React Router setup
-        ├── index.css            # Tailwind CSS import
+        ├── App.jsx
+        ├── context/
+        │   └── AuthContext.jsx
         ├── components/
-        │   ├── Layout.jsx       # Shared header/footer
-        │   └── RoomCard.jsx     # Room display card
+        │   ├── Layout.jsx
+        │   ├── RoomCard.jsx
+        │   ├── GuestPicker.jsx
+        │   └── ProtectedRoute.jsx
         └── pages/
-            ├── SearchPage.jsx       # Customer: search rooms
-            ├── BookingPage.jsx      # Customer: book + pay
-            ├── ConfirmationPage.jsx # Customer: booking confirmed
-            └── DashboardPage.jsx    # Staff: rooms & reservations
+            ├── HomePage.jsx
+            ├── SearchPage.jsx
+            ├── BookingPage.jsx
+            ├── ConfirmationPage.jsx
+            ├── AccountPage.jsx
+            ├── LoginPage.jsx
+            ├── UserLoginPage.jsx
+            └── DashboardPage.jsx
 ```
+
+---
 
 ## API Endpoints
 
-| Method | Endpoint                          | Description                        |
-| ------ | --------------------------------- | ---------------------------------- |
-| GET    | `/api/rooms`                      | List all rooms (staff)             |
-| GET    | `/api/rooms/available?checkIn=&checkOut=` | Search available rooms by dates |
-| GET    | `/api/rooms/:id`                  | Get room details                   |
-| PATCH  | `/api/rooms/:id/status`           | Update room status (staff)         |
-| POST   | `/api/reservations`               | Create a PENDING reservation       |
-| GET    | `/api/reservations`               | List all reservations (staff)      |
-| POST   | `/api/payments`                   | Process mock payment → CONFIRMED   |
+| Method | Endpoint                                  | Description                          |
+| ------ | ----------------------------------------- | ------------------------------------ |
+| POST   | `/api/auth/login`                         | Login                                |
+| POST   | `/api/auth/logout`                        | Logout                               |
+| GET    | `/api/auth/me`                            | Current session                      |
+| GET    | `/api/rooms`                              | List all rooms (staff)               |
+| GET    | `/api/rooms/available?checkIn=&checkOut=` | Search available rooms by dates      |
+| GET    | `/api/rooms/featured`                     | Featured rooms for homepage          |
+| GET    | `/api/rooms/cities`                       | List available cities                |
+| GET    | `/api/rooms/:id`                          | Get room details                     |
+| PATCH  | `/api/rooms/:id/status`                   | Update room status (staff)           |
+| POST   | `/api/reservations`                       | Create a PENDING reservation         |
+| GET    | `/api/reservations`                       | List all reservations (staff)        |
+| GET    | `/api/reservations/my`                    | List current user's reservations     |
+| PATCH  | `/api/reservations/:id/cancel`            | Cancel a reservation                 |
+| POST   | `/api/payments`                           | Process mock payment → CONFIRMED     |
 
-## SRS Requirements Coverage
-
-| Requirement | Description                              | Implementation                    |
-| ----------- | ---------------------------------------- | --------------------------------- |
-| FR-1        | Search available rooms by dates          | `GET /api/rooms/available` + SearchPage |
-| FR-2        | View room prices and details             | RoomCard component + room endpoint |
-| FR-3        | Create/view/manage reservations          | BookingPage + reservation endpoints |
-| FR-4        | Reception dashboard for occupancy        | DashboardPage rooms table          |
-| FR-5        | Manage room availability                 | Status dropdown on DashboardPage   |
-| FR-6        | Process reservation payments             | Mock payment endpoint + BookingPage |
+---
 
 ## Database Schema
 
-Four tables matching the SRS Class Diagram entities:
-
-- **rooms** — roomId, roomNumber, capacity, pricePerNight, status (AVAILABLE/BOOKED/MAINTENANCE)
+- **rooms** — roomId, roomNumber, capacity, pricePerNight, city, description, imageUrl, status (`AVAILABLE` / `BOOKED` / `MAINTENANCE`)
 - **customers** — customerId, fullName, email, phoneNumber
-- **reservations** — reservationId, customerId, roomId, checkInDate, checkOutDate, status (PENDING/CONFIRMED/CANCELLED), totalAmount
-- **payments** — paymentId, reservationId, amount, paymentDate, method, status (UNPAID/COMPLETED/REFUNDED)
+- **reservations** — reservationId, customerId, roomId, checkInDate, checkOutDate, status (`PENDING` / `CONFIRMED` / `CANCELLED`), totalAmount
+- **payments** — paymentId, reservationId, amount, paymentDate, method, status (`UNPAID` / `COMPLETED` / `REFUNDED`)
 
-## Resetting the Database
+---
 
-To start fresh, delete the SQLite file and restart:
+## SRS Requirements Coverage
 
-```bash
-rm backend/hotel.db
-npm run dev
-```
+| Requirement | Description                     | Implementation                          |
+| ----------- | ------------------------------- | --------------------------------------- |
+| FR-1        | Search available rooms by dates | `GET /api/rooms/available` + SearchPage |
+| FR-2        | View room prices and details    | RoomCard + room endpoint                |
+| FR-3        | Create/view/manage reservations | BookingPage + reservation endpoints     |
+| FR-4        | Reception dashboard             | DashboardPage                           |
+| FR-5        | Manage room availability        | Status dropdown on DashboardPage        |
+| FR-6        | Process reservation payments    | Mock payment endpoint + BookingPage     |
 
-The database will be recreated and re-seeded automatically.
+---
 
 ## Team
 
