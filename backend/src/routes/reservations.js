@@ -148,6 +148,10 @@ router.patch("/:id/cancel", authMiddleware, (req, res) => {
     return res.status(400).json({ error: "Reservation is already cancelled." });
   }
 
+  const hoursUntilCheckIn =
+    (new Date(reservation.checkInDate) - new Date()) / (1000 * 60 * 60);
+  const eligibleForRefund = hoursUntilCheckIn > 24;
+
   const cancelTx = db.transaction(() => {
     db.prepare("UPDATE reservations SET status = 'CANCELLED' WHERE reservationId = ?").run(
       req.params.id
@@ -157,13 +161,19 @@ router.patch("/:id/cancel", authMiddleware, (req, res) => {
       db.prepare("UPDATE rooms SET status = 'AVAILABLE' WHERE roomId = ?").run(
         reservation.roomId
       );
+
+      if (eligibleForRefund) {
+        db.prepare(
+          "UPDATE payments SET status = 'REFUNDED' WHERE reservationId = ? AND status = 'COMPLETED'"
+        ).run(req.params.id);
+      }
     }
   });
 
   cancelTx();
 
   const updated = db.prepare("SELECT * FROM reservations WHERE reservationId = ?").get(req.params.id);
-  res.json(updated);
+  res.json({ ...updated, refunded: eligibleForRefund });
 });
 
 module.exports = router;

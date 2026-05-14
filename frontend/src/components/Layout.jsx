@@ -40,7 +40,7 @@ export default function Layout({ children }) {
             </Link>
             {user ? (
               <>
-                {user.role === "manager" && (
+                {["manager", "receptionist", "marketing"].includes(user.role) && (
                   <Link to="/dashboard" className={linkClass("/dashboard")}>
                     Dashboard
                   </Link>
