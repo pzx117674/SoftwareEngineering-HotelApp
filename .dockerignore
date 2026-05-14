@@ -1,0 +1,10 @@
+node_modules/
+*/node_modules/
+frontend/dist/
+backend/hotel.db
+backend/hotel.db-shm
+backend/hotel.db-wal
+.git
+.env
+*.md
+.DS_Store
